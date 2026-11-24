@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fysio-rehab-v2';
+const CACHE_NAME = 'fysio-rehab-v3';
 
 const PRECACHE_ASSETS = [
   './',

@@ -105,7 +105,7 @@ export const SettingsView: React.FC<Props> = ({
               ))}
             </div>
             <span className="field-hint">
-              Korta och lugna signaler: 3, 2, 1 · Kör · Halvvägs · Byt sida · Stopp.
+              Korta och lugna signaler: 3, 2, 1 · Start · Halvvägs · Byt sida · Stopp.
             </span>
           </div>
         )}

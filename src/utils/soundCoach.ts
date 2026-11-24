@@ -25,7 +25,7 @@ const FALLBACK_TEXT: Record<VoiceCue, string> = {
   '3': 'Tre',
   '2': 'Två',
   '1': 'Ett',
-  start: 'Kör!',
+  start: 'Start',
   halfway: 'Halvvägs',
   stop: 'Stopp',
   swap: 'Byt sida',
