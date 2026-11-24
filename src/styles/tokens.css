@@ -1,0 +1,62 @@
+:root {
+  /* Palette — Nordic Physio Studio */
+  --bg-canvas: #f6f4ef;
+  --bg-surface: #ffffff;
+  --bg-subtle: #eeebe3;
+  --bg-muted: #e5e1d7;
+
+  --ink-primary: #1b241f;
+  --ink-secondary: #536058;
+  --ink-tertiary: #7c8780;
+  --ink-inverse: #ffffff;
+
+  --border-subtle: rgba(27, 36, 31, 0.08);
+  --border-strong: rgba(27, 36, 31, 0.16);
+
+  /* Functional accents */
+  --accent-pine: #2e6f5e;
+  --accent-pine-dark: #215446;
+  --accent-pine-soft: #e6f0ec;
+
+  --accent-amber: #c67628;
+  --accent-amber-soft: #fbf1e4;
+
+  --accent-fjord: #346583;
+  --accent-fjord-soft: #e8f1f6;
+
+  --accent-prep: #5e724b;
+  --accent-prep-soft: #edf2e8;
+
+  --accent-clay: #be4b3f;
+  --accent-clay-soft: #fbeae8;
+
+  /* Category tints */
+  --cat-ben-bg: #e6f0ec;
+  --cat-ben-ink: #215446;
+  --cat-bal-bg: #fbf1e4;
+  --cat-bal-ink: #965314;
+  --cat-ror-bg: #e8f1f6;
+  --cat-ror-ink: #274f68;
+  --cat-ovr-bg: #eeebe3;
+  --cat-ovr-ink: #536058;
+
+  /* Typography */
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 10px rgba(27, 36, 31, 0.04), 0 1px 2px rgba(27, 36, 31, 0.04);
+  --shadow-elevated: 0 10px 30px rgba(27, 36, 31, 0.09), 0 2px 6px rgba(27, 36, 31, 0.05);
+  --shadow-nav: 0 12px 32px rgba(27, 36, 31, 0.12);
+
+  /* Spacing & Shell */
+  --shell-max: 620px;
+  --nav-height: 76px;
+}
