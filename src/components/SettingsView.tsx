@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import {
   Download,
+  RefreshCw,
   RotateCcw,
   Upload,
   Volume2,
@@ -10,6 +11,9 @@ import { soundCoach } from '../utils/soundCoach';
 
 interface Props {
   settings: AppSettings;
+  appBuildLabel: string;
+  checkingUpdate: boolean;
+  onCheckForUpdate: () => void;
   onUpdateSettings: (patch: Partial<AppSettings>) => void;
   onExportBackup: () => void;
   onImportBackup: (file: File) => void;
@@ -18,6 +22,9 @@ interface Props {
 
 export const SettingsView: React.FC<Props> = ({
   settings,
+  appBuildLabel,
+  checkingUpdate,
+  onCheckForUpdate,
   onUpdateSettings,
   onExportBackup,
   onImportBackup,
@@ -233,6 +240,33 @@ export const SettingsView: React.FC<Props> = ({
           >
             <RotateCcw size={14} />
             Återställ
+          </button>
+        </div>
+      </section>
+
+      {/* App Version & Manual Update Check */}
+      <section className="card settings-group" aria-label="Appversion och uppdateringar">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <div>
+            <div className="field-label">Appversion</div>
+            <div className="field-hint">{appBuildLabel}</div>
+          </div>
+          <button
+            id="btn-check-update"
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled={checkingUpdate}
+            onClick={onCheckForUpdate}
+          >
+            <RefreshCw size={14} />
+            {checkingUpdate ? 'Söker...' : 'Sök uppdatering'}
           </button>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { CheckCircle2, RefreshCw, X } from 'lucide-react';
 import { BottomNav, type AppTab } from './components/BottomNav';
 import { CalendarView } from './components/CalendarView';
 import { ExercisesView } from './components/ExercisesView';
@@ -7,6 +8,13 @@ import { TodayView } from './components/TodayView';
 import { WorkoutPlayer } from './components/WorkoutPlayer';
 import { DEFAULT_EXERCISES } from './data/defaultProgram';
 import type { AppSettings, Exercise, WorkoutLog, WorkoutStep } from './types';
+import {
+  APP_BUILD_LABEL,
+  applyPwaUpdate,
+  checkForPwaUpdate,
+  consumeUpdateConfirmation,
+  subscribePwaUpdate,
+} from './utils/pwaUpdate';
 import { soundCoach } from './utils/soundCoach';
 import {
   createBackupPayload,
@@ -20,13 +28,34 @@ import {
 } from './utils/storage';
 import { buildWorkoutSteps } from './utils/workoutBuilder';
 
+interface ToastState {
+  message: string;
+  variant: 'default' | 'success';
+}
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>('today');
   const [exercises, setExercises] = useState<Exercise[]>(() => loadExercises());
   const [logs, setLogs] = useState<WorkoutLog[]>(() => loadLogs());
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const [activeSteps, setActiveSteps] = useState<WorkoutStep[] | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  // PWA update state
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const showToast = (
+    message: string,
+    variant: 'default' | 'success' = 'default',
+    durationMs = 2800
+  ) => {
+    setToast({ message, variant });
+    window.setTimeout(() => {
+      setToast((current) => (current?.message === message ? null : current));
+    }, durationMs);
+  };
 
   useEffect(() => {
     saveExercises(exercises);
@@ -40,11 +69,50 @@ export const App: React.FC = () => {
     saveSettings(settings);
   }, [settings]);
 
-  const showToast = (message: string) => {
-    setToast(message);
-    window.setTimeout(() => {
-      setToast((current) => (current === message ? null : current));
-    }, 2800);
+  // Listen for incoming PWA updates & show confirmation right after an update completes
+  useEffect(() => {
+    const unsubscribe = subscribePwaUpdate((hasUpdate) => {
+      if (hasUpdate) {
+        setUpdateAvailable(true);
+        setUpdateDismissed(false);
+      }
+    });
+
+    if (consumeUpdateConfirmation()) {
+      const timer = window.setTimeout(() => {
+        setToast({
+          message: `Appen är uppdaterad! (${APP_BUILD_LABEL})`,
+          variant: 'success',
+        });
+      }, 250);
+      const hideTimer = window.setTimeout(() => {
+        setToast((current) =>
+          current?.variant === 'success' ? null : current
+        );
+      }, 5500);
+      return () => {
+        unsubscribe();
+        window.clearTimeout(timer);
+        window.clearTimeout(hideTimer);
+      };
+    }
+
+    return unsubscribe;
+  }, []);
+
+  const handleCheckForUpdate = async () => {
+    setCheckingUpdate(true);
+    const result = await checkForPwaUpdate();
+    setCheckingUpdate(false);
+
+    if (result === 'update-found') {
+      setUpdateAvailable(true);
+      setUpdateDismissed(false);
+    } else if (result === 'up-to-date') {
+      showToast('Du har redan senaste versionen', 'success', 3200);
+    } else {
+      showToast('Uppdateringskoll fungerar i installerad/live-version');
+    }
   };
 
   const handleUpdateSettings = (patch: Partial<AppSettings>) => {
@@ -141,7 +209,7 @@ export const App: React.FC = () => {
       setExercises(restored.exercises);
       setLogs(restored.logs);
       setSettings(restored.settings);
-      showToast('Backup importerad!');
+      showToast('Backup importerad!', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Kunde inte läsa backup-filen');
     }
@@ -161,13 +229,50 @@ export const App: React.FC = () => {
           }}
           onExit={() => setActiveSteps(null)}
         />
-        {toast && <div className="toast">{toast}</div>}
+        {toast && (
+          <div className={`toast ${toast.variant === 'success' ? 'toast-success' : ''}`}>
+            {toast.variant === 'success' && <CheckCircle2 size={16} />}
+            <span>{toast.message}</span>
+          </div>
+        )}
       </>
     );
   }
 
   return (
     <>
+      {updateAvailable && !updateDismissed && (
+        <div className="update-banner-wrap" role="status" aria-live="polite">
+          <div className="update-banner">
+            <div className="update-banner-text">
+              <span className="update-banner-title">Ny uppdatering redo</span>
+              <span className="update-banner-sub">
+                Tryck för att ladda senaste versionen av Fysio.
+              </span>
+            </div>
+            <div className="update-banner-actions">
+              <button
+                id="btn-apply-update"
+                type="button"
+                className="update-banner-btn"
+                onClick={applyPwaUpdate}
+              >
+                <RefreshCw size={13} />
+                Uppdatera
+              </button>
+              <button
+                type="button"
+                className="update-banner-dismiss"
+                aria-label="Stäng notis"
+                onClick={() => setUpdateDismissed(true)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'today' && (
         <TodayView
           exercises={exercises}
@@ -205,6 +310,9 @@ export const App: React.FC = () => {
       {activeTab === 'settings' && (
         <SettingsView
           settings={settings}
+          appBuildLabel={APP_BUILD_LABEL}
+          checkingUpdate={checkingUpdate}
+          onCheckForUpdate={handleCheckForUpdate}
           onUpdateSettings={handleUpdateSettings}
           onExportBackup={handleExportBackup}
           onImportBackup={handleImportBackup}
@@ -213,7 +321,13 @@ export const App: React.FC = () => {
       )}
 
       <BottomNav activeTab={activeTab} onChange={setActiveTab} />
-      {toast && <div className="toast">{toast}</div>}
+
+      {toast && (
+        <div className={`toast ${toast.variant === 'success' ? 'toast-success' : ''}`}>
+          {toast.variant === 'success' && <CheckCircle2 size={16} />}
+          <span>{toast.message}</span>
+        </div>
+      )}
     </>
   );
 };
