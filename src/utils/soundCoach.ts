@@ -1,4 +1,4 @@
-import type { AppSettings, BodySide, VoiceCoachId } from '../types';
+import type { AppSettings, BodySide } from '../types';
 
 export type VoiceCue =
   | '3'
@@ -34,8 +34,8 @@ const FALLBACK_TEXT: Record<VoiceCue, string> = {
 
 class SoundCoach {
   private audioCtx: AudioContext | null = null;
-  private bufferCache = new Map<string, AudioBuffer>();
-  private loadingPromises = new Map<string, Promise<AudioBuffer | null>>();
+  private bufferCache = new Map<VoiceCue, AudioBuffer>();
+  private loadingPromises = new Map<VoiceCue, Promise<AudioBuffer | null>>();
   private activeSource: AudioBufferSourceNode | null = null;
   private previewTimers: number[] = [];
 
@@ -59,47 +59,43 @@ class SoundCoach {
     }
   }
 
-  private getAudioUrl(voice: VoiceCoachId, cue: VoiceCue): string {
-    return `./audio/${voice}/${cue}.mp3`;
+  private getAudioUrl(cue: VoiceCue): string {
+    return `./audio/mattias/${cue}.mp3`;
   }
 
-  private async loadCueBuffer(
-    voice: VoiceCoachId,
-    cue: VoiceCue
-  ): Promise<AudioBuffer | null> {
-    const cacheKey = `${voice}:${cue}`;
-    const cached = this.bufferCache.get(cacheKey);
+  private async loadCueBuffer(cue: VoiceCue): Promise<AudioBuffer | null> {
+    const cached = this.bufferCache.get(cue);
     if (cached) return cached;
 
-    const existingPromise = this.loadingPromises.get(cacheKey);
+    const existingPromise = this.loadingPromises.get(cue);
     if (existingPromise) return existingPromise;
 
     const promise = (async () => {
       try {
         this.unlock();
         if (!this.audioCtx) return null;
-        const res = await fetch(this.getAudioUrl(voice, cue));
+        const res = await fetch(this.getAudioUrl(cue));
         if (!res.ok) return null;
         const arrayBuf = await res.arrayBuffer();
         const decoded = await this.audioCtx.decodeAudioData(arrayBuf);
-        this.bufferCache.set(cacheKey, decoded);
+        this.bufferCache.set(cue, decoded);
         return decoded;
       } catch {
         return null;
       } finally {
-        this.loadingPromises.delete(cacheKey);
+        this.loadingPromises.delete(cue);
       }
     })();
 
-    this.loadingPromises.set(cacheKey, promise);
+    this.loadingPromises.set(cue, promise);
     return promise;
   }
 
-  /** Preload all short cues for the selected neural voice so playback has zero latency */
-  preloadVoice(voice: VoiceCoachId): void {
+  /** Preload all short cues so playback has zero latency */
+  preloadVoice(): void {
     this.unlock();
     ALL_CUES.forEach((cue) => {
-      void this.loadCueBuffer(voice, cue);
+      void this.loadCueBuffer(cue);
     });
   }
 
@@ -150,14 +146,13 @@ class SoundCoach {
     }
   }
 
-  /** Plays a pre-recorded natural Swedish neural voice cue */
+  /** Plays a pre-recorded natural Swedish voice cue (Mattias) */
   playCue(cue: VoiceCue, settings: AppSettings): void {
     if (settings.audioMode !== 'voice-and-sound') return;
 
-    const voice: VoiceCoachId = settings.voiceCoach || 'sofie';
     this.unlock();
 
-    void this.loadCueBuffer(voice, cue).then((buffer) => {
+    void this.loadCueBuffer(cue).then((buffer) => {
       if (buffer && this.audioCtx) {
         try {
           if (this.activeSource) {
@@ -185,7 +180,7 @@ class SoundCoach {
 
       // Fallback to HTMLAudioElement if Web Audio decode wasn't available
       try {
-        const audio = new Audio(this.getAudioUrl(voice, cue));
+        const audio = new Audio(this.getAudioUrl(cue));
         void audio.play().catch(() => this.speakFallback(cue));
       } catch {
         this.speakFallback(cue);
@@ -193,12 +188,11 @@ class SoundCoach {
     });
   }
 
-  /** Plays a short 3-2-1-Kör preview in Settings */
+  /** Plays a short 3-2-1-Start preview in Settings */
   playVoicePreview(settings: AppSettings): void {
     this.stopAll();
     this.unlock();
-    const voice: VoiceCoachId = settings.voiceCoach || 'sofie';
-    this.preloadVoice(voice);
+    this.preloadVoice();
 
     const sequence: { delayMs: number; cue: VoiceCue }[] = [
       { delayMs: 0, cue: '3' },

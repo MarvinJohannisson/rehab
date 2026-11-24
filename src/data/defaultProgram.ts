@@ -150,7 +150,6 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 
 export const DEFAULT_SETTINGS: AppSettings = {
   audioMode: 'voice-and-sound',
-  voiceCoach: 'sofie',
   countdownBeeps: true,
   halfwayCue: true,
   prepSeconds: 5,

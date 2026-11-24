@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fysio-rehab-v3';
+const CACHE_NAME = 'fysio-rehab-v4';
 
 const PRECACHE_ASSETS = [
   './',
@@ -9,14 +9,6 @@ const PRECACHE_ASSETS = [
   './exercises/bear-crawl.jpg',
   './exercises/bear-to-crab.jpg',
   './exercises/forward-reverse-lunge.jpg',
-  './audio/sofie/3.mp3',
-  './audio/sofie/2.mp3',
-  './audio/sofie/1.mp3',
-  './audio/sofie/start.mp3',
-  './audio/sofie/halfway.mp3',
-  './audio/sofie/stop.mp3',
-  './audio/sofie/swap.mp3',
-  './audio/sofie/done.mp3',
   './audio/mattias/3.mp3',
   './audio/mattias/2.mp3',
   './audio/mattias/1.mp3',

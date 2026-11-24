@@ -35,11 +35,8 @@ export interface Exercise {
 
 export type AudioMode = 'voice-and-sound' | 'sound-only' | 'muted';
 
-export type VoiceCoachId = 'sofie' | 'mattias';
-
 export interface AppSettings {
   audioMode: AudioMode;
-  voiceCoach: VoiceCoachId;
   countdownBeeps: boolean;
   halfwayCue: boolean;
   prepSeconds: number;

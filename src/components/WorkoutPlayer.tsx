@@ -74,12 +74,11 @@ export const WorkoutPlayer: React.FC<Props> = ({
 
   useEffect(() => {
     startedAtRef.current = Date.now();
-    soundCoach.preloadVoice(settingsRef.current.voiceCoach);
+    soundCoach.preloadVoice();
   }, []);
 
   useEffect(() => {
     settingsRef.current = settings;
-    soundCoach.preloadVoice(settings.voiceCoach);
   }, [settings]);
 
   const currentStep = steps[stepIndex];

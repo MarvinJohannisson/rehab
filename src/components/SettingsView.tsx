@@ -5,7 +5,7 @@ import {
   Upload,
   Volume2,
 } from 'lucide-react';
-import type { AppSettings, AudioMode, VoiceCoachId } from '../types';
+import type { AppSettings, AudioMode } from '../types';
 import { soundCoach } from '../utils/soundCoach';
 
 interface Props {
@@ -24,15 +24,6 @@ export const SettingsView: React.FC<Props> = ({
   onResetProgram,
 }) => {
   const importInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleSelectVoice = (voiceCoach: VoiceCoachId) => {
-    const nextSettings = { ...settings, voiceCoach };
-    onUpdateSettings({ voiceCoach });
-    soundCoach.preloadVoice(voiceCoach);
-    if (settings.audioMode === 'voice-and-sound') {
-      soundCoach.playCue('start', nextSettings);
-    }
-  };
 
   const handleTestVoice = () => {
     soundCoach.playVoicePreview(settings);
@@ -83,31 +74,9 @@ export const SettingsView: React.FC<Props> = ({
         </div>
 
         {settings.audioMode === 'voice-and-sound' && (
-          <div className="field">
-            <span className="field-label">Välj röst</span>
-            <div className="segmented">
-              {(
-                [
-                  { id: 'sofie', label: 'Sofie (lugn & varm)' },
-                  { id: 'mattias', label: 'Mattias (lugn & tydlig)' },
-                ] as { id: VoiceCoachId; label: string }[]
-              ).map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`segmented-btn ${
-                    settings.voiceCoach === opt.id ? 'active' : ''
-                  }`}
-                  onClick={() => handleSelectVoice(opt.id)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-            <span className="field-hint">
-              Korta och lugna signaler: 3, 2, 1 · Start · Halvvägs · Byt sida · Stopp.
-            </span>
-          </div>
+          <p className="field-hint">
+            Korta, tydliga signaler: 3, 2, 1 · Start · Halvvägs · Byt sida · Stopp.
+          </p>
         )}
 
         <div className="settings-divider" />
