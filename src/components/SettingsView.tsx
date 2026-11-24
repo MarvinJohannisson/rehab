@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   Download,
   RotateCcw,
   Upload,
   Volume2,
 } from 'lucide-react';
-import type { AppSettings, AudioMode, VisualPreference } from '../types';
+import type { AppSettings, AudioMode, VoiceCoachId } from '../types';
 import { soundCoach } from '../utils/soundCoach';
 
 interface Props {
@@ -23,26 +23,19 @@ export const SettingsView: React.FC<Props> = ({
   onImportBackup,
   onResetProgram,
 }) => {
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    const refresh = () => setVoices(soundCoach.getSwedishVoices());
-    refresh();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = refresh;
+  const handleSelectVoice = (voiceCoach: VoiceCoachId) => {
+    const nextSettings = { ...settings, voiceCoach };
+    onUpdateSettings({ voiceCoach });
+    soundCoach.preloadVoice(voiceCoach);
+    if (settings.audioMode === 'voice-and-sound') {
+      soundCoach.playCue('start', nextSettings);
     }
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.onvoiceschanged = null;
-      }
-    };
-  }, []);
+  };
 
   const handleTestVoice = () => {
-    soundCoach.unlock();
-    soundCoach.playStartWork(settings);
-    soundCoach.speak('Gör dig redo! 3, 2, 1, kör! Byt sida om 10 sekunder.', settings);
+    soundCoach.playVoicePreview(settings);
   };
 
   return (
@@ -66,7 +59,7 @@ export const SettingsView: React.FC<Props> = ({
             onClick={handleTestVoice}
           >
             <Volume2 size={14} />
-            Testa
+            Testa 3-2-1
           </button>
         </div>
 
@@ -90,55 +83,39 @@ export const SettingsView: React.FC<Props> = ({
         </div>
 
         {settings.audioMode === 'voice-and-sound' && (
-          <>
-            <div className="field">
-              <label htmlFor="voice-select" className="field-label">
-                Svensk röst
-              </label>
-              <select
-                id="voice-select"
-                className="select"
-                value={settings.voiceURI}
-                onChange={(e) => onUpdateSettings({ voiceURI: e.target.value })}
-              >
-                <option value="">Automatisk svensk röst (standard)</option>
-                {voices.map((v) => (
-                  <option key={v.voiceURI} value={v.voiceURI}>
-                    {v.name} ({v.lang})
-                  </option>
-                ))}
-              </select>
+          <div className="field">
+            <span className="field-label">Välj röst</span>
+            <div className="segmented">
+              {(
+                [
+                  { id: 'sofie', label: 'Sofie (lugn & varm)' },
+                  { id: 'mattias', label: 'Mattias (lugn & tydlig)' },
+                ] as { id: VoiceCoachId; label: string }[]
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`segmented-btn ${
+                    settings.voiceCoach === opt.id ? 'active' : ''
+                  }`}
+                  onClick={() => handleSelectVoice(opt.id)}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-
-            <div className="field">
-              <label htmlFor="voice-rate" className="field-label">
-                Talhastighet: {settings.voiceRate.toFixed(1)}×
-              </label>
-              <div className="range-row">
-                <span className="field-hint">Lugn</span>
-                <input
-                  id="voice-rate"
-                  type="range"
-                  min={0.8}
-                  max={1.3}
-                  step={0.1}
-                  value={settings.voiceRate}
-                  onChange={(e) =>
-                    onUpdateSettings({ voiceRate: Number(e.target.value) })
-                  }
-                />
-                <span className="field-hint">Snabb</span>
-              </div>
-            </div>
-          </>
+            <span className="field-hint">
+              Korta och lugna signaler: 3, 2, 1 · Kör · Halvvägs · Byt sida · Stopp.
+            </span>
+          </div>
         )}
 
         <div className="settings-divider" />
 
         <div className="switch-row">
           <div>
-            <div className="field-label">Nedräkning 3-2-1</div>
-            <div className="field-hint">Tydlig ton de sista 3 sekunderna</div>
+            <div className="field-label">Nedräkningstoner 3-2-1</div>
+            <div className="field-hint">Mjuk ton de sista 3 sekunderna</div>
           </div>
           <button
             type="button"
@@ -156,7 +133,7 @@ export const SettingsView: React.FC<Props> = ({
         <div className="switch-row">
           <div>
             <div className="field-label">Halvvägs-signal</div>
-            <div className="field-hint">Rösten säger "Halvvägs!" på set över 30 sek</div>
+            <div className="field-hint">Rösten säger "Halvvägs" i mitten av setet</div>
           </div>
           <button
             type="button"
@@ -170,35 +147,9 @@ export const SettingsView: React.FC<Props> = ({
         </div>
       </section>
 
-      {/* Workout & Visual Preferences */}
-      <section className="card settings-group" aria-label="Pass och visning">
-        <h2 className="section-title">Pass & visning</h2>
-
-        <div className="field">
-          <span className="field-label">Standardvisning av övningar</span>
-          <div className="segmented">
-            {(
-              [
-                { id: 'illustration', label: 'Illustration' },
-                { id: 'animation', label: 'Animation' },
-              ] as { id: VisualPreference; label: string }[]
-            ).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`segmented-btn ${
-                  settings.preferredVisual === opt.id ? 'active' : ''
-                }`}
-                onClick={() => onUpdateSettings({ preferredVisual: opt.id })}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <span className="field-hint">
-            Du kan alltid växla direkt på varje övning för att testa vilket som känns bäst.
-          </span>
-        </div>
+      {/* Workout Preferences */}
+      <section className="card settings-group" aria-label="Passinställningar">
+        <h2 className="section-title">Pass & mål</h2>
 
         <div className="form-grid-2">
           <div className="field">
@@ -284,7 +235,14 @@ export const SettingsView: React.FC<Props> = ({
 
         <div className="settings-divider" />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
           <div>
             <div className="field-label">Återställ grundprogram</div>
             <div className="field-hint">

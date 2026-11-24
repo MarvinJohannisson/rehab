@@ -17,7 +17,6 @@ import type {
   AppSettings,
   CompletedExerciseSummary,
   SessionFeeling,
-  VisualPreference,
   WorkoutLog,
   WorkoutStep,
 } from '../types';
@@ -26,6 +25,7 @@ import {
   formatSideSwedish,
   requestScreenWakeLock,
   soundCoach,
+  type VoiceCue,
 } from '../utils/soundCoach';
 import { ExerciseVisual } from './ExerciseVisual';
 
@@ -74,10 +74,12 @@ export const WorkoutPlayer: React.FC<Props> = ({
 
   useEffect(() => {
     startedAtRef.current = Date.now();
+    soundCoach.preloadVoice(settingsRef.current.voiceCoach);
   }, []);
 
   useEffect(() => {
     settingsRef.current = settings;
+    soundCoach.preloadVoice(settings.voiceCoach);
   }, [settings]);
 
   const currentStep = steps[stepIndex];
@@ -102,11 +104,12 @@ export const WorkoutPlayer: React.FC<Props> = ({
       if (sentinel) {
         void sentinel.release();
       }
-      soundCoach.stopSpeech();
+      soundCoach.stopAll();
     };
   }, [isComplete]);
 
-  // Announce whenever entering a new step
+  // Minimal, calm cues when entering each phase:
+  // start ("Kör!"), swap ("Byt sida"), rest ("Stopp")
   useEffect(() => {
     if (isComplete || !currentStep) return;
     if (announcedStepIdRef.current === currentStep.id) return;
@@ -115,43 +118,20 @@ export const WorkoutPlayer: React.FC<Props> = ({
     lastRepRef.current = 1;
 
     const cfg = settingsRef.current;
-    const sideText = formatSideSwedish(currentStep.side);
 
-    if (currentStep.phase === 'prep') {
-      const targetName = currentStep.exercise.shortName;
-      soundCoach.speak(
-        `Gör dig redo för ${targetName}${sideText ? `, ${sideText}` : ''}.`,
-        cfg
-      );
-    } else if (currentStep.phase === 'work') {
+    if (currentStep.phase === 'work') {
       soundCoach.playStartWork(cfg);
-      const repInfo =
-        currentStep.exercise.timerMode === 'reps'
-          ? `${currentStep.exercise.reps} repetitioner`
-          : `${currentStep.durationSeconds} sekunder`;
-      soundCoach.speak(
-        `Kör! ${currentStep.exercise.shortName}${sideText ? `, ${sideText}` : ''}. ${repInfo}.`,
-        cfg
-      );
+      soundCoach.playCue('start', cfg);
     } else if (currentStep.phase === 'swap') {
       soundCoach.playSideSwap(cfg);
-      soundCoach.speak(
-        `Byt sida! Gör dig redo för ${formatSideSwedish(currentStep.nextSide ?? 'right')}.`,
-        cfg
-      );
+      soundCoach.playCue('swap', cfg);
     } else if (currentStep.phase === 'rest') {
       soundCoach.playRest(cfg);
-      const nextName = currentStep.nextExercise?.shortName;
-      soundCoach.speak(
-        `Bra jobbat! Vila i ${currentStep.durationSeconds} sekunder.${
-          nextName ? ` Nästa övning är ${nextName}.` : ''
-        }`,
-        cfg
-      );
+      soundCoach.playCue('stop', cfg);
     }
   }, [currentStep, isComplete]);
 
-  // Accurate tick loop (updates every 200ms using Date.now() delta so background throttling stays accurate)
+  // Accurate tick loop (updates every 200ms using Date.now() delta so mobile throttling stays accurate)
   useEffect(() => {
     if (!isRunning || isComplete || !currentStep) return;
 
@@ -172,25 +152,23 @@ export const WorkoutPlayer: React.FC<Props> = ({
         if (ceilNext >= 1 && ceilNext <= 3 && lastSecondCueRef.current !== ceilNext) {
           lastSecondCueRef.current = ceilNext;
           soundCoach.playTick(cfg);
-          if (cfg.audioMode === 'voice-and-sound') {
-            soundCoach.speak(String(ceilNext), cfg);
-          }
+          soundCoach.playCue(String(ceilNext) as VoiceCue, cfg);
         }
 
-        // Halfway cue on longer work sets (>= 30s)
+        // Halfway cue on work sets (>= 20s)
         if (
           currentStep.phase === 'work' &&
           cfg.halfwayCue &&
-          stepTotal >= 30 &&
+          stepTotal >= 20 &&
           next <= stepTotal / 2 &&
-          next > 5 &&
+          next > 4 &&
           halfwaySpokenStepRef.current !== currentStep.id
         ) {
           halfwaySpokenStepRef.current = currentStep.id;
-          soundCoach.speak('Halvvägs!', cfg);
+          soundCoach.playCue('halfway', cfg);
         }
 
-        // Rep tempo pulse on rep-based work sets
+        // Subtle tempo pulse on rep-based work sets
         if (
           currentStep.phase === 'work' &&
           currentStep.exercise.timerMode === 'reps' &&
@@ -231,7 +209,7 @@ export const WorkoutPlayer: React.FC<Props> = ({
             setIsComplete(true);
             setIsRunning(false);
             soundCoach.playComplete(cfg);
-            soundCoach.speak('Snyggt jobbat! Dagens fysiopass är klart.', cfg);
+            soundCoach.playCue('done', cfg);
             return 0;
           }
         }
@@ -254,7 +232,7 @@ export const WorkoutPlayer: React.FC<Props> = ({
     setShowExitConfirm(false);
     setIsRunning(false);
     setIsComplete(true);
-    soundCoach.stopSpeech();
+    soundCoach.stopAll();
   };
 
   const jumpToStep = (nextIndex: number) => {
@@ -275,7 +253,7 @@ export const WorkoutPlayer: React.FC<Props> = ({
       setIsComplete(true);
       setIsRunning(false);
       soundCoach.playComplete(settings);
-      soundCoach.speak('Snyggt jobbat! Dagens fysiopass är klart.', settings);
+      soundCoach.playCue('done', settings);
       return;
     }
     announcedStepIdRef.current = null;
@@ -297,7 +275,7 @@ export const WorkoutPlayer: React.FC<Props> = ({
         : settings.audioMode === 'sound-only'
           ? 'muted'
           : 'voice-and-sound';
-    if (next === 'muted') soundCoach.stopSpeech();
+    if (next === 'muted') soundCoach.stopAll();
     onUpdateSettings({ audioMode: next });
   };
 
@@ -698,14 +676,7 @@ export const WorkoutPlayer: React.FC<Props> = ({
             </span>
           </div>
 
-          <ExerciseVisual
-            exercise={displayExercise}
-            preferredVisual={settings.preferredVisual}
-            onChangePreference={(pref: VisualPreference) =>
-              onUpdateSettings({ preferredVisual: pref })
-            }
-            compact
-          />
+          <ExerciseVisual exercise={displayExercise} compact />
 
           {displayExercise.cues.length > 0 ? (
             <ul className="cue-list">
@@ -761,7 +732,7 @@ export const WorkoutPlayer: React.FC<Props> = ({
                 type="button"
                 className="btn btn-danger btn-sm"
                 onClick={() => {
-                  soundCoach.stopSpeech();
+                  soundCoach.stopAll();
                   onExit();
                 }}
               >

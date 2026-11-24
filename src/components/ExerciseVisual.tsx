@@ -1,48 +1,35 @@
 import React, { useMemo, useState } from 'react';
-import { Film, Image as ImageIcon, PlayCircle, Sparkles } from 'lucide-react';
-import type { Exercise, VisualPreference } from '../types';
+import { Film, Image as ImageIcon, PlayCircle } from 'lucide-react';
+import type { Exercise } from '../types';
 import { getYouTubeEmbedUrl, isDirectVideoUrl } from '../utils/mediaUtils';
-import { ExerciseAnimation } from './ExerciseAnimation';
 
 interface Props {
   exercise: Exercise;
-  preferredVisual: VisualPreference;
-  onChangePreference?: (pref: VisualPreference) => void;
   compact?: boolean;
 }
 
+type VisualTab = 'illustration' | 'media';
+
 export const ExerciseVisual: React.FC<Props> = ({
   exercise,
-  preferredVisual,
-  onChangePreference,
   compact = false,
 }) => {
   const hasIllustration = Boolean(exercise.illustrationUrl);
-  const hasAnimation = Boolean(exercise.animationKey);
   const hasCustomMedia = Boolean(exercise.videoUrl || exercise.customImageUrl);
 
-  const availableTabs = useMemo<VisualPreference[]>(() => {
-    const tabs: VisualPreference[] = [];
+  const availableTabs = useMemo<VisualTab[]>(() => {
+    const tabs: VisualTab[] = [];
     if (hasIllustration) tabs.push('illustration');
-    if (hasAnimation) tabs.push('animation');
     if (hasCustomMedia) tabs.push('media');
     return tabs;
-  }, [hasIllustration, hasAnimation, hasCustomMedia]);
+  }, [hasIllustration, hasCustomMedia]);
 
-  const [localTab, setLocalTab] = useState<VisualPreference | null>(null);
+  const [selectedTab, setSelectedTab] = useState<VisualTab | null>(null);
 
-  const activeTab: VisualPreference | null = useMemo(() => {
-    const candidate = localTab ?? preferredVisual;
-    if (availableTabs.includes(candidate)) return candidate;
+  const activeTab: VisualTab | null = useMemo(() => {
+    if (selectedTab && availableTabs.includes(selectedTab)) return selectedTab;
     return availableTabs[0] ?? null;
-  }, [localTab, preferredVisual, availableTabs]);
-
-  const handleSelectTab = (tab: VisualPreference) => {
-    setLocalTab(tab);
-    if (tab === 'illustration' || tab === 'animation') {
-      onChangePreference?.(tab);
-    }
-  };
+  }, [selectedTab, availableTabs]);
 
   const youtubeEmbed = getYouTubeEmbedUrl(exercise.videoUrl);
   const directVideo = isDirectVideoUrl(exercise.videoUrl);
@@ -61,29 +48,17 @@ export const ExerciseVisual: React.FC<Props> = ({
   return (
     <div className="visual-box">
       {availableTabs.length > 1 && (
-        <div className="visual-tabs" role="tablist" aria-label="Välj visningsläge för övning">
+        <div className="visual-tabs" role="tablist" aria-label="Välj bild eller video">
           {hasIllustration && (
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'illustration'}
               className={`visual-tab ${activeTab === 'illustration' ? 'active' : ''}`}
-              onClick={() => handleSelectTab('illustration')}
+              onClick={() => setSelectedTab('illustration')}
             >
               <ImageIcon size={13} />
               Illustration
-            </button>
-          )}
-          {hasAnimation && (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'animation'}
-              className={`visual-tab ${activeTab === 'animation' ? 'active' : ''}`}
-              onClick={() => handleSelectTab('animation')}
-            >
-              <Sparkles size={13} />
-              Animation
             </button>
           )}
           {hasCustomMedia && (
@@ -92,7 +67,7 @@ export const ExerciseVisual: React.FC<Props> = ({
               role="tab"
               aria-selected={activeTab === 'media'}
               className={`visual-tab ${activeTab === 'media' ? 'active' : ''}`}
-              onClick={() => handleSelectTab('media')}
+              onClick={() => setSelectedTab('media')}
             >
               <Film size={13} />
               {exercise.videoUrl ? 'Video' : 'Eget foto'}
@@ -108,10 +83,6 @@ export const ExerciseVisual: React.FC<Props> = ({
             alt={`Illustration för ${exercise.name}`}
             loading="lazy"
           />
-        )}
-
-        {activeTab === 'animation' && exercise.animationKey && (
-          <ExerciseAnimation animationKey={exercise.animationKey} />
         )}
 
         {activeTab === 'media' && (

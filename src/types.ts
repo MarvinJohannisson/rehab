@@ -2,14 +2,6 @@ export type ExerciseCategory = 'ben' | 'bal' | 'rorlighet' | 'ovrigt';
 
 export type TimerMode = 'time' | 'reps';
 
-export type AnimationKey =
-  | 'wall-squat'
-  | 'bear-crawl'
-  | 'bear-to-crab'
-  | 'forward-reverse-lunge';
-
-export type VisualPreference = 'illustration' | 'animation' | 'media';
-
 export interface Exercise {
   id: string;
   name: string;
@@ -33,8 +25,6 @@ export interface Exercise {
   restSeconds: number;
   /** Built-in illustration path (relative to public/) */
   illustrationUrl?: string;
-  /** Built-in looping SVG animation key */
-  animationKey?: AnimationKey;
   /** User-uploaded compressed photo (data URL) or external image URL */
   customImageUrl?: string;
   /** User-provided YouTube link or video URL */
@@ -45,16 +35,16 @@ export interface Exercise {
 
 export type AudioMode = 'voice-and-sound' | 'sound-only' | 'muted';
 
+export type VoiceCoachId = 'sofie' | 'mattias';
+
 export interface AppSettings {
   audioMode: AudioMode;
-  voiceURI: string;
-  voiceRate: number;
+  voiceCoach: VoiceCoachId;
   countdownBeeps: boolean;
   halfwayCue: boolean;
   prepSeconds: number;
   interleaveLegCore: boolean;
   weeklyGoal: number;
-  preferredVisual: VisualPreference;
 }
 
 export type SessionFeeling = 'great' | 'good' | 'mild-ache' | 'discomfort';

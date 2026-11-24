@@ -70,7 +70,6 @@ export const DEFAULT_EXERCISES: Exercise[] = [
     sideSwapSeconds: 8,
     restSeconds: 45,
     illustrationUrl: './exercises/wall-squat.jpg',
-    animationKey: 'wall-squat',
     note: 'AMRAP i 30–60 sek per ben med kontrollerat tempo.',
   },
   {
@@ -96,7 +95,6 @@ export const DEFAULT_EXERCISES: Exercise[] = [
     sideSwapSeconds: 8,
     restSeconds: 45,
     illustrationUrl: './exercises/bear-crawl.jpg',
-    animationKey: 'bear-crawl',
     note: 'Långsamt är jobbigare och ger bättre träning för bålen.',
   },
   {
@@ -121,7 +119,6 @@ export const DEFAULT_EXERCISES: Exercise[] = [
     sideSwapSeconds: 8,
     restSeconds: 45,
     illustrationUrl: './exercises/forward-reverse-lunge.jpg',
-    animationKey: 'forward-reverse-lunge',
     note: 'AMRAP i 30–60 sek per sida. Byt ben vid signalen.',
   },
   {
@@ -147,19 +144,16 @@ export const DEFAULT_EXERCISES: Exercise[] = [
     sideSwapSeconds: 8,
     restSeconds: 45,
     illustrationUrl: './exercises/bear-to-crab.jpg',
-    animationKey: 'bear-to-crab',
     note: '1–2 set i början så bålen inte blir överbelastad (2–3 bålset totalt/pass).',
   },
 ];
 
 export const DEFAULT_SETTINGS: AppSettings = {
   audioMode: 'voice-and-sound',
-  voiceURI: '',
-  voiceRate: 1.0,
+  voiceCoach: 'sofie',
   countdownBeeps: true,
   halfwayCue: true,
   prepSeconds: 5,
   interleaveLegCore: true,
   weeklyGoal: 3,
-  preferredVisual: 'illustration',
 };

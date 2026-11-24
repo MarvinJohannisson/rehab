@@ -12,7 +12,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { CATEGORY_LABELS, JANNIS_PROGRAM_TIPS } from '../data/defaultProgram';
-import type { AppSettings, Exercise, VisualPreference, WorkoutLog } from '../types';
+import type { AppSettings, Exercise, WorkoutLog } from '../types';
 import {
   countWorkoutsThisWeek,
   formatDurationMinutes,
@@ -78,10 +78,6 @@ export const TodayView: React.FC<Props> = ({
       ? timedActive[0].durationSeconds
       : null;
 
-  const handleVisualPrefChange = (pref: VisualPreference) => {
-    onUpdateSettings({ preferredVisual: pref });
-  };
-
   const cycleQuickAudio = () => {
     const next =
       settings.audioMode === 'voice-and-sound'
@@ -130,7 +126,10 @@ export const TodayView: React.FC<Props> = ({
             </h2>
           </div>
 
-          <div className="weekly-dots" aria-label={`${sessionsThisWeek} av ${settings.weeklyGoal} pass denna vecka`}>
+          <div
+            className="weekly-dots"
+            aria-label={`${sessionsThisWeek} av ${settings.weeklyGoal} pass denna vecka`}
+          >
             <span className="weekly-dots-label">
               Vecka: {sessionsThisWeek}/{settings.weeklyGoal}
             </span>
@@ -220,7 +219,7 @@ export const TodayView: React.FC<Props> = ({
         </section>
       )}
 
-      {/* Today's Exercises with Expandable Visuals & Form Cues */}
+      {/* Today's Exercises with Expandable Illustrations & Form Cues */}
       <section aria-label="Valda övningar">
         <div className="section-head">
           <h2 className="section-title">Dagens övningar</h2>
@@ -314,11 +313,7 @@ export const TodayView: React.FC<Props> = ({
 
                 {isExpanded && (
                   <div className="exercise-expand-panel">
-                    <ExerciseVisual
-                      exercise={exercise}
-                      preferredVisual={settings.preferredVisual}
-                      onChangePreference={handleVisualPrefChange}
-                    />
+                    <ExerciseVisual exercise={exercise} />
 
                     <div>
                       <p style={{ fontSize: '14px', color: 'var(--ink-primary)' }}>
@@ -368,7 +363,9 @@ export const TodayView: React.FC<Props> = ({
       <aside className="physio-note-card" aria-label="Upplägg från fysioterapeut">
         <div className="physio-note-title">
           <Info size={15} color="var(--accent-pine)" />
-          <span>Upplägg från {JANNIS_PROGRAM_TIPS.physio} ({JANNIS_PROGRAM_TIPS.frequency})</span>
+          <span>
+            Upplägg från {JANNIS_PROGRAM_TIPS.physio} ({JANNIS_PROGRAM_TIPS.frequency})
+          </span>
         </div>
         <p>{JANNIS_PROGRAM_TIPS.summary}</p>
         <p style={{ fontWeight: 500, color: 'var(--ink-primary)' }}>
