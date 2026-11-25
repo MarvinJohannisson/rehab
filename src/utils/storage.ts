@@ -5,7 +5,15 @@ const KEYS = {
   exercises: 'fysio_exercises_v1',
   logs: 'fysio_logs_v1',
   settings: 'fysio_settings_v1',
+  programVersion: 'fysio_program_version_v1',
 } as const;
+
+const CURRENT_PROGRAM_VERSION = 2;
+
+/** Built-in exercises introduced in each program revision for one-time migration into existing localStorage */
+const PROGRAM_MIGRATIONS: Record<number, string[]> = {
+  2: ['dynamic-hamstring-stretch'],
+};
 
 function safeParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
@@ -19,8 +27,29 @@ function safeParse<T>(raw: string | null, fallback: T): T {
 export function loadExercises(): Exercise[] {
   const saved = safeParse<Exercise[] | null>(localStorage.getItem(KEYS.exercises), null);
   if (!Array.isArray(saved) || saved.length === 0) {
+    localStorage.setItem(KEYS.programVersion, String(CURRENT_PROGRAM_VERSION));
     return structuredClone(DEFAULT_EXERCISES);
   }
+
+  const storedVersion = Number(localStorage.getItem(KEYS.programVersion) ?? '1') || 1;
+  if (storedVersion < CURRENT_PROGRAM_VERSION) {
+    const merged = [...saved];
+    for (let v = storedVersion + 1; v <= CURRENT_PROGRAM_VERSION; v++) {
+      const idsToAdd = PROGRAM_MIGRATIONS[v] ?? [];
+      for (const id of idsToAdd) {
+        if (!merged.some((e) => e.id === id)) {
+          const defaultExercise = DEFAULT_EXERCISES.find((e) => e.id === id);
+          if (defaultExercise) {
+            merged.push(structuredClone(defaultExercise));
+          }
+        }
+      }
+    }
+    localStorage.setItem(KEYS.exercises, JSON.stringify(merged));
+    localStorage.setItem(KEYS.programVersion, String(CURRENT_PROGRAM_VERSION));
+    return merged;
+  }
+
   return saved;
 }
 

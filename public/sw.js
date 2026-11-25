@@ -9,6 +9,7 @@ const PRECACHE_ASSETS = [
   './exercises/bear-crawl.jpg',
   './exercises/bear-to-crab.jpg',
   './exercises/forward-reverse-lunge.jpg',
+  './exercises/dynamic-hamstring-stretch.jpg',
   './audio/mattias/3.mp3',
   './audio/mattias/2.mp3',
   './audio/mattias/1.mp3',

@@ -146,6 +146,31 @@ export const DEFAULT_EXERCISES: Exercise[] = [
     illustrationUrl: './exercises/bear-to-crab.jpg',
     note: '1–2 set i början så bålen inte blir överbelastad (2–3 bålset totalt/pass).',
   },
+  {
+    id: 'dynamic-hamstring-stretch',
+    name: 'Dynamisk hamstring stretch liggande',
+    shortName: 'Hamstring stretch',
+    category: 'rorlighet',
+    description:
+      'Ligg på rygg med ena knät böjt och foten stadigt i golvet. Håll med båda händerna bakom låret på det andra benet med höften i cirka 90 grader. Sträck ut underbenet uppåt tills det sträcker mjukt på baksidan av låret och böj sedan kontrollerat tillbaka.',
+    cues: [
+      'Ligg på rygg med ena foten i golvet för stabilitet',
+      'Håll med båda händerna bakom låret och håll höften stilla i ca 90°',
+      'Sträck knät uppåt till en mjuk, behaglig stretch på baksidan av låret',
+      'Böj tillbaka kontrollerat och jobba rytmiskt i 20 repetitioner per ben',
+    ],
+    enabled: true,
+    timerMode: 'reps',
+    durationSeconds: 60,
+    reps: 20,
+    secondsPerRep: 3,
+    sets: 1,
+    unilateral: true,
+    sideSwapSeconds: 8,
+    restSeconds: 30,
+    illustrationUrl: './exercises/dynamic-hamstring-stretch.jpg',
+    note: '1 set · 20 repetitioner per ben. Mjuk dynamisk rörlighet utan att tvinga in i smärta.',
+  },
 ];
 
 export const DEFAULT_SETTINGS: AppSettings = {

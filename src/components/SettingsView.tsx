@@ -6,6 +6,7 @@ import {
   Upload,
   Volume2,
 } from 'lucide-react';
+import { DEFAULT_EXERCISES } from '../data/defaultProgram';
 import type { AppSettings, AudioMode } from '../types';
 import { soundCoach } from '../utils/soundCoach';
 
@@ -222,7 +223,7 @@ export const SettingsView: React.FC<Props> = ({
           <div>
             <div className="field-label">Återställ grundprogram</div>
             <div className="field-hint">
-              Laddar tillbaka Jannis 4 övningar (din kalenderhistorik behålls)
+              Laddar tillbaka grundprogrammet ({DEFAULT_EXERCISES.length} övningar — din kalenderhistorik behålls)
             </div>
           </div>
           <button
